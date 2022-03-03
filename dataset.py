@@ -9,8 +9,8 @@ class ETHDataset(Dataset):
     def __init__(self, img_dir = "data/ETH_Synthesizability", transform=None, number_of_items = 7424):
         metadata = pandas.read_csv(f"data/eth_labels.csv")
         self.metadata = metadata[metadata.quality > 0.5].reset_index()
-        if number_of_items is not None:
-            self.metadata  = self.metadata.sample(number_of_items)
+        # if number_of_items is not None:
+        #     self.metadata  = self.metadata.sample(number_of_items)
         self.img_dir = f"{img_dir}/texture"
         self.transform = transform
         self.labelmap = {"animal": 0,
@@ -83,6 +83,7 @@ class ETHDataset(Dataset):
         image = Image.open(image_path)
         if self.transform:
             image = self.transform(image)
+        image = image.permute(1,2,0).numpy()
         return image, material_attributes  #, image_path
 
     def get_path(self, idx):

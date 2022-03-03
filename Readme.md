@@ -1,8 +1,9 @@
 # Dataset
 
-The dataset 
+>Dengxin Dai, Hayko Riemenschneider, and Luc Van Gool.. The Synthesizability of Texture Examples. In CVPR 2014.
 
 
+# Run the code
 
 To download the data type the following commands in the console:
 
