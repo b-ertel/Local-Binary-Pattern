@@ -8,9 +8,11 @@ dataset = ETHDataset(transform=transforms.Compose([
                                transforms.ToTensor(),
                            ]))
 
-
+dataset.__getitem__(0)
+dataset.get_path(0)
+dataset.get_attribute_name(0)
 
 
 
 if __name__ == '__main__':
-print("test")
+    print("test")

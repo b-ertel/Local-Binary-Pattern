@@ -89,3 +89,8 @@ class ETHDataset(Dataset):
         material = self.metadata.iloc[idx]["name"]
         image_path = os.path.join(self.img_dir, f"{material}.jpg")
         return image_path
+
+    def get_attribute_name(self, idx):
+        material = self.metadata.iloc[idx]["name"]
+        material_attributes = material.split("_")[1]
+        return material_attributes.lower()
