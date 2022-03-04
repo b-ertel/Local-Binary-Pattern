@@ -95,3 +95,40 @@ class ETHDataset(Dataset):
         material = self.metadata.iloc[idx]["name"]
         material_attributes = material.split("_")[1]
         return material_attributes.lower()
+
+
+
+
+
+class BrodatzDataset(Dataset):
+    """Dataset class for the flash images from the Brodatz repository"""
+    def __init__(self, img_dir = "data/textures", transform=None):
+        self.metadata = pandas.read_csv(f"data/brodatz_labels.csv", header = None)
+        # if number_of_items is not None:
+        #     self.metadata  = self.metadata.sample(number_of_items)
+        self.img_dir = img_dir
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.metadata)
+
+    def __getitem__(self, idx):
+        material = self.metadata.iloc[idx][2]
+        img_name = self.metadata.iloc[idx][0]
+        image_path = os.path.join(self.img_dir, f"{img_name}")
+        # print(image_path)
+        image = Image.open(image_path)
+        if self.transform:
+            image = self.transform(image)
+        image = image.permute(1,2,0).numpy()
+        return image, material  #, image_path
+
+    def get_path(self, idx):
+        material = self.metadata.iloc[idx]["name"]
+        image_path = os.path.join(self.img_dir, f"{material}.jpg")
+        return image_path
+
+    def get_attribute_name(self, idx):
+        material = self.metadata.iloc[idx]["name"]
+        material_attributes = material.split("_")[1]
+        return material_attributes.lower()
