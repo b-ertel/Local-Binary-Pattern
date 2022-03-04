@@ -50,6 +50,13 @@ def overlay_labels(image, lbp, labels):
     return label2rgb(mask, image=image, bg_label=0, alpha=0.2)
 
 
+def integer_to_binary(integer):
+    binary_array = np.zeros(8)
+    binary_string = np.binary_repr(integer)
+    for idx in range(len(binary_string)):
+        binary_array[-(idx+1)] = int(binary_string[-(idx+1)])
+    return binary_array
+
 
 app.layout = html.Div(
     className="container",
@@ -72,8 +79,52 @@ app.layout = html.Div(
         html.Div(id='bins-text'),
         html.Div(children=[dcc.Graph(id="marked-image")],
                  style={}),
+        html.Div(children=[dcc.Graph(id="filters")],
+                 style={}),
     ],
 )
+
+def selection_to_int_array(selected):
+    if selected is not None:
+        allpoints = selected["points"]
+        numbers = [allpoints[i]["x"] for i in range(len(allpoints))]
+    if selected is None:
+        numbers = [1,2]
+    return numbers
+
+
+@app.callback(
+    Output("filters", "figure"),
+    Input('lbp-hist', "selectedData"),
+)
+def show_lbp_filter(selection):
+    integer_numbers = selection_to_int_array(selection)
+    integer_number = int(integer_numbers[0])
+    binary_array = integer_to_binary(integer_number)
+    radius = 1
+    slices = np.deg2rad(45)
+    x = []
+    y = []
+    color = []
+    marker = []
+    marker_dict = {1:0, 0:100}
+    #circle
+    for i, val in enumerate(binary_array):
+        x.append(np.cos(i*slices+4*slices))
+        y.append(np.sin(i*slices+4*slices))
+        marker.append(marker_dict[val])
+        color.append(str(val))
+    #middle point
+    x.append(0)
+    y.append(0)
+    marker.append(3)
+
+    fig = go.Figure(go.Scatter(mode = "markers", x=x, y=y, marker_symbol = marker))
+    fig.update_layout(title = str(integer_number), height = 300, width = 300)
+    fig.update_xaxes(visible = False)
+    fig.update_yaxes(visible=False)
+    return fig
+
 
 
 @app.callback(
@@ -114,7 +165,7 @@ def lbp_hist(value):
     grey_image = to_grey_scale(image, dataset_name)
     lbp = local_binary_pattern(grey_image, n_points, radius, "nri_uniform").flatten()
     # hist1, _ = np.histogram(lbp, np.arange(2 ** n_points + 1), density=True)
-    fig = go.Figure(data=[go.Histogram(x=lbp, nbinsx=2**n_points)])
+    fig = go.Figure(data=[go.Histogram(x=lbp, nbinsx=int(lbp.max()+1))])
     fig.layout.height = 450
     return fig
 
@@ -125,11 +176,7 @@ def lbp_hist(value):
     Input('lbp-hist', "selectedData"),
 )
 def marked_image(value, selected):
-    if selected is not None:
-        allpoints = selected["points"]
-        numbers = [allpoints[i]["x"] for i in range(len(allpoints))]
-    if selected is None:
-        numbers = [1,2,3,4,5]
+    numbers = selection_to_int_array(selected)
     image = dataset[value][0]
     n_points = 8
     radius = 3
