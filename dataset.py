@@ -6,12 +6,12 @@ import pandas
 
 class ETHDataset(Dataset):
     """Dataset class for the flash images from the ETH synthesizability repository"""
-    def __init__(self, img_dir = "data/ETH_Synthesizability", transform=None, number_of_items = 7424):
+    def __init__(self, img_dir = os.path.join("data", "ETH_Synthesizability", "texture"), transform=None, number_of_items = 7424):
         metadata = pandas.read_csv(f"data/eth_labels.csv")
         self.metadata = metadata[metadata.quality > 0.5].reset_index()
         # if number_of_items is not None:
         #     self.metadata  = self.metadata.sample(number_of_items)
-        self.img_dir = f"{img_dir}/texture"
+        self.img_dir = img_dir
         self.transform = transform
         self.labelmap = {"animal": 0,
             "apple": 1,
@@ -120,15 +120,14 @@ class BrodatzDataset(Dataset):
         image = Image.open(image_path)
         if self.transform:
             image = self.transform(image)
-        image = image.permute(1,2,0).numpy()
+            image = image.permute(1,2,0).numpy()
         return image, material  #, image_path
 
     def get_path(self, idx):
-        material = self.metadata.iloc[idx]["name"]
-        image_path = os.path.join(self.img_dir, f"{material}.jpg")
+        img_name = self.metadata.iloc[idx][0]
+        image_path = os.path.join(self.img_dir, f"{img_name}")
         return image_path
 
     def get_attribute_name(self, idx):
-        material = self.metadata.iloc[idx]["name"]
-        material_attributes = material.split("_")[1]
-        return material_attributes.lower()
+        material = self.metadata.iloc[idx][2]
+        return material.lower()
