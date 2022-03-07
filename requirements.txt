@@ -6,3 +6,4 @@ scikit-image==0.19.2
 pandas==1.4.1
 #wget
 dash
+dash-bootstrap-components==1.0.3

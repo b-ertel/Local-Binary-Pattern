@@ -1,5 +1,6 @@
 from dataset import *
 import torchvision.transforms as transforms
+import dash
 from dash import Dash, dcc, html, Input, Output, no_update
 import plotly.graph_objects as go
 import plotly.express as px
@@ -7,91 +8,149 @@ from PIL import Image
 import numpy as np
 from skimage.feature import local_binary_pattern
 from skimage.color import label2rgb
+import dash_bootstrap_components as dbc
+from util import *
 
 
-# dataset = ETHDataset(transform=transforms.Compose([
+##############CONFIGS, DATA, ETC #####################################
+# dataset = BrodatzDataset(transform=transforms.Compose([
 #                                # transforms.Resize(image_size),
 #                                transforms.CenterCrop([256,256]),
 #                                transforms.ToTensor(),
 #                            ]))
+# dataset_name = "brodatz"
 
-dataset = BrodatzDataset(transform=transforms.Compose([
+dataset = ETHDataset(transform=transforms.Compose([
                                # transforms.Resize(image_size),
                                transforms.CenterCrop([256,256]),
                                transforms.ToTensor(),
                            ]))
-dataset_name = "brodatz"
+
+dataset_name = "eth"
 
 
-test = dataset.__getitem__(0)[0]
-
-dataset.__getitem__(0)
-dataset.get_path(10)
-dataset.get_attribute_name(0)
-
-app = Dash("Dashboard for LBP")
+########################################################################
 
 
-
-def to_grey_scale(image, dataset_name):
-    if dataset_name == "brodatz":
-        grey_image = (image.squeeze(2)*255).astype(np.uint8)
-    else:
-        grey_image = Image.fromarray((image * 255).astype(np.uint8)).convert("L")
-    return grey_image
-
-
-
-
-
-def overlay_labels(image, lbp, labels):
-    mask = np.logical_or.reduce([lbp == each for each in labels])
-    image = to_grey_scale(image, dataset_name)
-    return label2rgb(mask, image=image, bg_label=0, alpha=0.2)
-
-
-def integer_to_binary(integer):
-    binary_array = np.zeros(8)
-    binary_string = np.binary_repr(integer)
-    for idx in range(len(binary_string)):
-        binary_array[-(idx+1)] = int(binary_string[-(idx+1)])
-    return binary_array
-
-
-app.layout = html.Div(
-    className="container",
-    children=[
-        html.Div(children=[
-            html.H3(children='Visualizing Local Binary Pattern'),
-            html.H6(children='on ETH synthesizability dataset', style={'marginTop': '-15px', 'marginBottom': '30px'})
-        ], style={'textAlign': 'center'}),
-        dcc.Input(
-            id='image_number',
-            type='number',
-            value=5
-        ),
-        html.Div(children = [dcc.Graph(id ="input-image")],
-                 style={'display': 'inline-block'}),
-        html.Div(children=[dcc.Graph(id="grey-image")],
-                 style={'display': 'inline-block'}),
-        html.Div(children=[dcc.Graph(id="lbp-hist")],
-                 style={'display': 'inline-block'}),
-        html.Div(id='bins-text'),
-        html.Div(children=[dcc.Graph(id="marked-image")],
-                 style={}),
-        html.Div(children=[dcc.Graph(id="filters")],
-                 style={}),
-    ],
+app = dash.Dash(
+    external_stylesheets=[dbc.themes.COSMO]
 )
 
-def selection_to_int_array(selected):
-    if selected is not None:
-        allpoints = selected["points"]
-        numbers = [allpoints[i]["x"] for i in range(len(allpoints))]
-    if selected is None:
-        numbers = [1,2]
-    return numbers
 
+
+controls = dbc.Card(
+    [
+        html.H4("Overall Settings", className="card-title"),
+        html.Div(
+            [
+                dbc.Label("Image index"),
+                dbc.Input(id="image-index", type="number", value=35), #change this for brodatz-data
+            ]
+        ),
+        html.Div(
+            [
+                dbc.Label("LBP radius"),
+                dbc.Input(id="lbp-radius", type="number", value=1),
+            ]
+        ),
+        html.Div(
+            [
+                dbc.Label("LBP: number of points"),
+                dbc.Input(id="lbp-number-points", type="number", value=8),
+            ]
+        ),
+
+        dbc.Label("LBP: method"),
+        dcc.Dropdown(
+            id="lbp-method",
+            options=[
+                {"label": str(i), "value": i} for i in ["default", "ror", "uniform", "nri_uniform", "var"]
+            ],
+            value="default",
+            clearable=False,
+        ),
+],
+    body= True
+)
+
+
+
+@app.callback(
+    Output("input-image", "figure"),
+    Input('image-index', "value"),
+)
+def input_image(value):
+    image = dataset[value][0]
+    if image.shape[2] == 1:
+        image = image.squeeze(2)
+        fig = px.imshow(image, binary_string=True)
+    else:
+        fig = px.imshow(image)
+    fig.layout.height = 400
+    fig.layout.width = 400
+    return fig
+
+@app.callback(
+    Output("grey-image", "figure"),
+    Input('image-index', "value"),
+)
+def grey_image(value):
+    image = dataset[value][0]
+    grey_image = to_grey_scale(image, dataset_name)
+    fig = px.imshow(grey_image, binary_string=True)
+    fig.layout.height = 400
+    fig.layout.width = 400
+    return fig
+
+
+@app.callback(
+    Output("lbp-hist", "figure"),
+    Input('image-index', "value"),
+    Input("lbp-radius", "value"),
+    Input("lbp-number-points", "value"),
+    Input("lbp-method", "value"),
+)
+def lbp_hist(image_index, lbp_radius, lbp_number_points, lbp_method):
+    image = dataset[image_index][0]
+    grey_image = to_grey_scale(image, dataset_name)
+    lbp = local_binary_pattern(grey_image, lbp_number_points, lbp_radius, lbp_method).flatten()
+    # hist1, _ = np.histogram(lbp, np.arange(2 ** n_points + 1), density=True)
+    fig = go.Figure(data=[go.Histogram(x=lbp, nbinsx=int(lbp.max()+1))])
+    fig.layout.height = 450
+    return fig
+
+
+@app.callback(
+    Output("selected-bins-text", "children"),
+    Input('lbp-hist', "selectedData"),
+)
+def bins_to_text(selected):
+    if selected is None:
+        return None
+    allpoints = selected["points"]
+    numbers = [allpoints[i]["x"] for i in range(len(allpoints))]
+    return f"Selected: {numbers}"
+
+
+@app.callback(
+    Output("marked-image", "figure"),
+    Input('image-index', "value"),
+    Input("lbp-radius", "value"),
+    Input("lbp-number-points", "value"),
+    Input('lbp-hist', "selectedData"),
+    Input("lbp-method", "value"),
+)
+def marked_image(image_index, lbp_radius, lbp_number_points, selected, lbp_method):
+    numbers = selection_to_int_array(selected)
+    image = dataset[image_index][0]
+    grey = np.array(to_grey_scale(image, dataset_name))
+    lbp = local_binary_pattern(grey, lbp_number_points, lbp_radius, lbp_method)
+    edge_labels = numbers
+    overlay = overlay_labels(image, lbp, edge_labels)
+    fig = px.imshow(overlay)
+    fig.layout.height = 800
+    fig.layout.width = 800
+    return fig
 
 @app.callback(
     Output("filters", "figure"),
@@ -110,8 +169,8 @@ def show_lbp_filter(selection):
     marker_dict = {1:0, 0:100}
     #circle
     for i, val in enumerate(binary_array):
-        x.append(np.cos(i*slices+4*slices))
-        y.append(np.sin(i*slices+4*slices))
+        x.append(np.cos(-i*slices+4*slices))
+        y.append(np.sin(-i*slices+4*slices))
         marker.append(marker_dict[val])
         color.append(str(val))
     #middle point
@@ -125,85 +184,54 @@ def show_lbp_filter(selection):
     fig.update_yaxes(visible=False)
     return fig
 
+filters = html.Div(children=[dcc.Graph(id="filters")],
+                 style={})
 
+app.layout = dbc.Container(
+    [   html.Div(children=[
+        html.H1("Local Binary Pattern Visualization"),
+        html.H2("on different datasets"),
+        html.Hr(),
+    ], style={'textAlign': 'center'}),
+        dbc.Row(
+            [
+                html.Div(html.H2("Input and Settings"), style={'textAlign': 'center'}),
+                dbc.Col(controls, md=4),
+                # dbc.Col(dcc.Graph(id="cluster-graph"), md=8),
+                dbc.Col(html.Div(children = [html.H3("Input image"),
+                    html.Div(children=[dcc.Graph(id="input-image")],
+                         style={'display': 'inline-block'})], style={'textAlign': 'center'})),
+                dbc.Col(html.Div(children = [html.H3("Grey image"),
+                    html.Div(children=[dcc.Graph(id="grey-image")], style={'display': 'inline-block'})], style={'textAlign': 'center'})),
+            ],
+            align="center",
+        ),
+        dbc.Row([
+            html.Div(html.H2("Local Binary Pattern Histogram"), style={'textAlign': 'center'}),
+            html.Div(children=[dcc.Graph(id="lbp-hist")],
+                     style={'display': 'inline-block'}),
+            ]
+        ),
+        dbc.Row([
+            html.Div(html.H2("Overlay and Filters"), style={'textAlign': 'center'}),
+            html.Div(id ="selected-bins-text", style={'textAlign': 'center'}),
+            dbc.Col(  html.Div(children=[dcc.Graph(id="marked-image")],
+                 ),
+                  ),
+            dbc.Col(filters),
 
-@app.callback(
-    Output("input-image", "figure"),
-    Input('image_number', "value"),
+            ]
+        )
+    ],
+    fluid=True,
 )
-def input_image(value):
-    image = dataset[value][0]
-    if image.shape[2] == 1:
-        image = image.squeeze(2)
-        fig = px.imshow(image, binary_string=True)
-    else:
-        fig = px.imshow(image)
-    fig.layout.height = 400
-    fig.layout.width = 400
-    return fig
-
-@app.callback(
-    Output("grey-image", "figure"),
-    Input('image_number', "value"),
-)
-def grey_image(value):
-    image = dataset[value][0]
-    grey_image = to_grey_scale(image, dataset_name)
-    fig = px.imshow(grey_image, binary_string=True)
-    fig.layout.height = 400
-    fig.layout.width = 400
-    return fig
-
-@app.callback(
-    Output("lbp-hist", "figure"),
-    Input('image_number', "value"),
-)
-def lbp_hist(value):
-    image = dataset[value][0]
-    n_points = 8
-    radius = 3
-    grey_image = to_grey_scale(image, dataset_name)
-    lbp = local_binary_pattern(grey_image, n_points, radius, "nri_uniform").flatten()
-    # hist1, _ = np.histogram(lbp, np.arange(2 ** n_points + 1), density=True)
-    fig = go.Figure(data=[go.Histogram(x=lbp, nbinsx=int(lbp.max()+1))])
-    fig.layout.height = 450
-    return fig
 
 
-@app.callback(
-    Output("marked-image", "figure"),
-    Input('image_number', "value"),
-    Input('lbp-hist', "selectedData"),
-)
-def marked_image(value, selected):
-    numbers = selection_to_int_array(selected)
-    image = dataset[value][0]
-    n_points = 8
-    radius = 3
-    grey = np.array(to_grey_scale(image, dataset_name))
-    lbp = local_binary_pattern(grey, n_points, radius, "nri_uniform")
-    edge_labels = numbers
-    overlay = overlay_labels(image, lbp, edge_labels)
-    fig = px.imshow(overlay)
-    fig.layout.height = 800
-    fig.layout.width = 800
-    return fig
 
 
-@app.callback(
-    Output("bins-text", "children"),
-    Input('lbp-hist', "selectedData"),
-)
-def bins_to_text(selected):
-    if selected is None:
-        return None
-    allpoints = selected["points"]
-    numbers = [allpoints[i]["x"] for i in range(len(allpoints))]
-    return f"selected: {numbers}"
 
 
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
-    print("test")
+    app.run_server(debug=True, port=8051)
