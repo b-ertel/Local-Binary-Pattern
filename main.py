@@ -148,6 +148,7 @@ def marked_image(image_index, lbp_radius, lbp_number_points, selected, lbp_metho
     edge_labels = numbers
     overlay = overlay_labels(image, lbp, edge_labels)
     fig = px.imshow(overlay)
+    fig.add_trace(go.Scatter(x=[230], y=[100], marker=dict(color='red', size=5)))
     fig.layout.height = 800
     fig.layout.width = 800
     return fig
