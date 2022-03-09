@@ -19,6 +19,19 @@ def selection_to_int_array(selected):
         numbers = [1,2]
     return numbers
 
+def selection_to_mask(selected):
+    if selected is not None:
+        image_size = 256
+        allpoints = selected["points"]
+        flat_indices = [allpoints[i]["pointNumbers"] for i in range(len(allpoints))]
+        flat_indices = [item for sublist in flat_indices for item in sublist]
+        y = [ind // 256 for ind in flat_indices]
+        x = [ind % 256 for ind in flat_indices]
+    if selected is None:
+        x = [1]
+        y = [1]
+    return x, y
+
 def overlay_labels(image, lbp, labels):
     mask = np.logical_or.reduce([lbp == each for each in labels])
     # image = to_grey_scale(image, dataset_name)

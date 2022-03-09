@@ -142,13 +142,19 @@ def bins_to_text(selected):
 )
 def marked_image(image_index, lbp_radius, lbp_number_points, selected, lbp_method):
     numbers = selection_to_int_array(selected)
+    x, y = selection_to_mask(selected)
     image = dataset[image_index][0]
     grey = np.array(to_grey_scale(image, dataset_name))
     lbp = local_binary_pattern(grey, lbp_number_points, lbp_radius, lbp_method)
     edge_labels = numbers
+    mask = np.logical_or.reduce([lbp == each for each in edge_labels])
+    masky, maskx = np.where(mask)
     overlay = overlay_labels(image, lbp, edge_labels)
-    fig = px.imshow(overlay)
-    fig.add_trace(go.Scatter(x=[230], y=[100], marker=dict(color='red', size=5)))
+    # grey_image = to_grey_scale(image)
+    # fig = px.imshow(overlay)
+    grey_image = to_grey_scale(image, dataset_name)
+    fig = px.imshow(grey_image, binary_string=True)
+    fig.add_trace(go.Scatter(x = x, y = y, mode = "markers", marker=dict(color='red', size=5), opacity=0.5 ))
     fig.layout.height = 800
     fig.layout.width = 800
     return fig
@@ -167,13 +173,17 @@ def show_lbp_filter(selection):
     y = []
     color = []
     marker = []
-    marker_dict = {1:0, 0:100}
+    marker_dict = {1:100, 0:0}
+    P = 8
     #circle
-    for i, val in enumerate(binary_array):
-        x.append(np.cos(-i*slices+4*slices))
-        y.append(np.sin(-i*slices+4*slices))
+    y = (np.sin(2 * np.pi * np.arange(P, dtype=np.double) / P)).tolist()
+    x = (np.cos(2 * np.pi * np.arange(P, dtype=np.double) / P)).tolist()
+    for i, val in enumerate(binary_array[::-1]): #reverse it...
+
+        # x.append(np.cos(-i*slices+4*slices))
+        # y.append(np.sin(-i*slices+4*slices))
         marker.append(marker_dict[val])
-        color.append(str(val))
+        # color.append(str(val))
     #middle point
     x.append(0)
     y.append(0)
