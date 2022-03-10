@@ -59,13 +59,8 @@ def marked_image(image_index, lbp_radius, lbp_number_points, selected, lbp_metho
     fig.layout.width = 800
     return fig
 
-@app.callback(
-    Output("filters", "figure"),
-    Input('lbp-hist', "selectedData"),
-)
-def show_lbp_filter(selection):
-    integer_numbers = selection_to_int_array(selection)
-    integer_number = int(integer_numbers[0])
+
+def show_lbp_filter(integer_number):
     binary_array = integer_to_binary(integer_number)
     radius = 1
     slices = np.deg2rad(45)
@@ -90,11 +85,25 @@ def show_lbp_filter(selection):
     marker.append(3)
 
     fig = go.Figure(go.Scatter(mode = "markers", x=x, y=y, marker_symbol = marker))
-    fig.update_layout(title = str(integer_number), height = 300, width = 300)
+    fig.update_layout(title = str(integer_number), height = 150, width = 150)
     fig.update_xaxes(visible = False)
     fig.update_yaxes(visible=False)
-    fig["layout"].update(margin=dict(l=0, r=0, b=0, t=0))
+    fig["layout"].update(margin=dict(l=0, r=5, b=5, t=30))
     return fig
 
-filters =   html.Div(children=[dcc.Graph(id="filters")],
-                 style={})
+
+@app.callback(
+    Output("html-test", "children"),
+    Input('lbp-hist', "selectedData"),
+)
+def create_filter_html(selection):
+    integer_numbers = selection_to_int_array(selection)
+    integer_number = int(integer_numbers[0])
+    figures = [show_lbp_filter(i) for i in integer_numbers]
+    content = [dbc.Row([dbc.Col(dcc.Graph(figure = fig, id=f"filter_{num}"))]) for fig, num in zip(figures, integer_numbers)]
+    return content
+
+filters =   dbc.Row([
+                dbc.Col(html.Div(id = "html-test",
+                 style={})),
+                     ])
