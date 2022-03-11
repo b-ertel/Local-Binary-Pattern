@@ -25,26 +25,33 @@ app.layout = dbc.Container(
         html.H2("on different datasets"),
         html.Hr(),
     ], style={'textAlign': 'center'}),
+        #############################INPUT######################################
         dbc.Row(
             [
                 html.Div(html.H2("Input and Settings"), style={'textAlign': 'center'}),
                 # dbc.Col(dcc.Graph(id="cluster-graph"), md=8),
-                dbc.Col(html.Div(children = [html.H3("Input image"),
-                    html.Div(children=[dcc.Graph(id="input-image")],
+                dbc.Col(html.Div(children = [html.H3("Original image"),
+                    html.Div(children=[dcc.Graph(id="input-image"), ],
                          style={'display': 'inline-block'})], style={'textAlign': 'center'})),
                 dbc.Col(image_transformation, md=4),
-                dbc.Col(html.Div(children = [html.H3("Grey image"),
+                dbc.Col(html.Div(children = [html.H3("Transformed image"),
+                                             dcc.Store("transformed_image"), dcc.Store("input_image_data"),
                     html.Div(children=[dcc.Graph(id="grey-image")], style={'display': 'inline-block'})], style={'textAlign': 'center'})),
             ],
             align="center",
         ),
+        #############################    LBP   ######################################
+        html.Hr(),
         dbc.Row([
             html.Div(html.H2("Local Binary Pattern Histogram"), style={'textAlign': 'center'}),
+            dbc.Col(lbp_setting, width=3),
             dbc.Col(html.Div(children=[dcc.Graph(id="lbp-hist")],
-                     style={'display': 'inline-block'})),
-            dbc.Col(dbc.Col(lbp_setting, md=4))
+                             style={'display': 'inline-block'}))
             ]
         ),
+
+        #############################    EXPLANATION    #################################
+        html.Hr(),
         dbc.Row([
             html.Div(html.H2("Overlay and Filters"), style={'textAlign': 'center'}),
             html.Div(id ="selected-bins-text", style={'textAlign': 'center'}),

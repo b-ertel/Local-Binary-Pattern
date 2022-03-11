@@ -7,6 +7,8 @@ from page.app import app as app
 from page.data import *
 import plotly.express as px
 from util import *
+import json
+import io
 
 
 
@@ -21,28 +23,34 @@ image_transformation = dbc.Card(
                 dbc.Input(id="image-index", type="number", value=35), #change this for brodatz-data
             ]
         ),
-        html.Div(
-            [
-                dbc.Label("LBP radius"),
-                dbc.Input(id="lbp-radius2", type="number", value=1),
-            ]
-        ),
-        html.Div(
-            [
-                dbc.Label("LBP: number of points"),
-                dbc.Input(id="lbp-number-points2", type="number", value=8),
-            ]
-        ),
-
-        dbc.Label("LBP: method"),
-        dcc.Dropdown(
-            id="lbp-method2",
-            options=[
-                {"label": str(i), "value": i} for i in ["default", "ror", "uniform", "nri_uniform", "var"]
-            ],
-            value="default",
-            clearable=False,
-        ),
+        dbc.Label("Zoom factor"),
+        html.Div([
+            dcc.Slider(1, 4, 0.25,
+                       value=1,
+                       id='zoom-factor'
+                       ),
+            # html.Div(id='zoom-container', children = "Zoom-factor")
+        ]),
+        dbc.Label("Shift in X"),
+        html.Div([
+            dcc.Slider(0, 256, 1, value=0, marks=None, id = "zoom-x",
+    tooltip={"placement": "bottom", "always_visible": False}),
+            # html.Div(id='zoom-x-container', children="Shift in X")
+        ]),
+        dbc.Label("Shift in Y"),
+        html.Div([
+            dcc.Slider(0, 256, 1, value=0, marks=None, id = "zoom-y",
+    tooltip={"placement": "bottom", "always_visible": False}),
+            # html.Div(id='zoom-y-container', children= "Shift in Y")
+        ]),
+        dbc.Label("Scale"),
+        html.Div([
+            dcc.Slider(1, 4, 0.25,
+                       value=1,
+                       id='scale-factor'
+                       ),
+            # html.Div(id='scale-container', children="Scale")
+        ]),
 ],
     body= True
 )
@@ -51,6 +59,7 @@ image_transformation = dbc.Card(
 
 @app.callback(
     Output("input-image", "figure"),
+    Output("input_image_data", "data"),
     Input('image-index', "value"),
     Input("upload-image", "contents")
 )
@@ -58,27 +67,47 @@ def input_image(value, upload_image):
     if upload_image is not None:
         decoded = base64.b64decode(upload_image.split("base64,")[1])
         image = Image.open(io.BytesIO(decoded))
-        image = np.asarray(image)
+        small_side = image.size[0] if image.size[0] < image.size[1] else image.size[1]
+        image = image.crop(((image.size[0]-small_side)//2,(image.size[1]-small_side)//2,small_side, small_side))
+        image = image.resize((256,256))
+        if image.mode is not "RGB":
+            image = image.convert("RGB")
     if upload_image is None:
         image = dataset[value][0]
-    if image.shape[2] == 1:
-        image = image.squeeze(2)
-        fig = px.imshow(image, binary_string=True)
-    else:
-        fig = px.imshow(image)
+    fig = px.imshow(image)
     fig.layout.height = 400
     fig.layout.width = 400
-    return fig
+    fig["layout"].update(margin=dict(l=0, r=5, b=5, t=30))
+    return fig, image_to_json(image)
+
 
 
 @app.callback(
     Output("grey-image", "figure"),
-    Input('image-index', "value"),
+    Output("transformed_image", "data"),
+    Input("input_image_data", "data"),
+    Input('zoom-factor', "value"),
+    Input('zoom-x', "value"),
+    Input('zoom-y', "value"),
+    Input('scale-factor', "value"),
 )
-def grey_image(value):
-    image = dataset[value][0]
-    grey_image = to_grey_scale(image, dataset_name)
-    fig = px.imshow(grey_image, binary_string=True)
+def grey_image(input_image, zoom_factor, zoom_x, zoom_y, scale_factor):
+    image = image_from_json(input_image)
+    if image.mode is not "L":
+        image = image.convert("L")
+
+    #zoom
+
+    w, h = image.size
+    image = image.crop((zoom_x , zoom_y,zoom_x + w//zoom_factor, zoom_y + h//zoom_factor))
+
+    #scale
+    w, h = image.size
+    image = image.resize((int(w//scale_factor), int(h//scale_factor)))
+
+    fig = px.imshow(image, binary_string=True)
     fig.layout.height = 400
     fig.layout.width = 400
-    return fig
+    fig["layout"].update(margin=dict(l=0, r=5, b=5, t=30))
+
+    return fig, image_to_json(image)

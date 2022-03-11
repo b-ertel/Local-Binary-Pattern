@@ -11,7 +11,7 @@ from page.data import *
 import plotly.express as px
 from util import *
 from skimage.feature import local_binary_pattern
-
+import json
 
 
 lbp_setting = dbc.Card(
@@ -34,7 +34,7 @@ lbp_setting = dbc.Card(
         dcc.Dropdown(
             id="lbp-method",
             options=[
-                {"label": str(i), "value": i} for i in ["default", "ror", "uniform", "nri_uniform", "var"]
+                {"label": str(i), "value": i} for i in ["default", "ror", "uniform", "nri_uniform"]
             ],
             value="default",
             clearable=False,
@@ -48,17 +48,17 @@ lbp_setting = dbc.Card(
 
 @app.callback(
     Output("lbp-hist", "figure"),
-    Input('image-index', "value"),
+    Input("transformed_image", "data"),
     Input("lbp-radius", "value"),
     Input("lbp-number-points", "value"),
     Input("lbp-method", "value"),
 )
-def lbp_hist(image_index, lbp_radius, lbp_number_points, lbp_method):
-    image = dataset[image_index][0]
-    grey_image = to_grey_scale(image, dataset_name)
+def lbp_hist(json_image,lbp_radius, lbp_number_points, lbp_method):
+    grey_image = image_from_json(json_image)
     lbp = local_binary_pattern(grey_image, lbp_number_points, lbp_radius, lbp_method).flatten()
-    # hist1, _ = np.histogram(lbp, np.arange(2 ** n_points + 1), density=True)
     fig = go.Figure(data=[go.Histogram(x=lbp, nbinsx=int(lbp.max()+1))])
+    fig.update_layout(yaxis_range=[0, 10000])
+    # fig.update_yaxes(title_text="y-axis in logarithmic scale", type="log")
     fig.layout.height = 450
     fig.layout.width  = 1000
     fig["layout"].update(margin=dict(l=0, r=0, b=0, t=0))

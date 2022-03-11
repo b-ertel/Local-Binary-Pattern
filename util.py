@@ -1,6 +1,13 @@
 from PIL import Image
 import numpy as np
 from skimage.color import label2rgb
+import json
+
+def image_to_json(image):
+    return json.dumps((np.array(image)).tolist())
+
+def image_from_json(json_image):
+    return Image.fromarray(np.array(json.loads(json_image), dtype='uint8'))
 
 def to_grey_scale(image, dataset_name):
     """converts image to greyscale"""
