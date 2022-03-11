@@ -20,7 +20,7 @@ image_transformation = dbc.Card(
         html.Div(
             [
                 dbc.Label("Image index"),
-                dbc.Input(id="image-index", type="number", value=35), #change this for brodatz-data
+                dbc.Input(id="image-index", type="number", value=1), #change this for brodatz-data
             ]
         ),
         dbc.Label("Zoom factor"),
@@ -70,10 +70,10 @@ def input_image(value, upload_image):
         small_side = image.size[0] if image.size[0] < image.size[1] else image.size[1]
         image = image.crop(((image.size[0]-small_side)//2,(image.size[1]-small_side)//2,small_side, small_side))
         image = image.resize((256,256))
-        if image.mode != "RGB":
-            image = image.convert("RGB")
     if upload_image is None:
         image = dataset[value][0]
+    if image.mode != "RGB":
+        image = image.convert("RGB")
     fig = px.imshow(image)
     fig.layout.height = 400
     fig.layout.width = 400

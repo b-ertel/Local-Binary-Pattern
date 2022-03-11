@@ -120,7 +120,7 @@ class BrodatzDataset(Dataset):
         image = Image.open(image_path)
         if self.transform:
             image = self.transform(image)
-            image = image.permute(1,2,0).numpy()
+
         return image, material  #, image_path
 
     def get_path(self, idx):
