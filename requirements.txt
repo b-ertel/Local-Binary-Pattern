@@ -28,7 +28,7 @@ six==1.16.0
 tenacity==8.0.1
 tifffile==2022.2.9
 torch==1.8
-torchaudio==0.8.2
+torchaudio==0.8
 torchvision==0.9
 typing-extensions==4.1.1
 Werkzeug==2.0.3
