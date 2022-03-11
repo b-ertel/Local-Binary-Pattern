@@ -1,0 +1,7 @@
+/data/ETH_Synthesizability
+/data/ETH_Synthesizability.zip
+/data/textures.zip
+venv
+*.pyc
+.DS_Store
+.env

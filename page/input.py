@@ -70,7 +70,7 @@ def input_image(value, upload_image):
         small_side = image.size[0] if image.size[0] < image.size[1] else image.size[1]
         image = image.crop(((image.size[0]-small_side)//2,(image.size[1]-small_side)//2,small_side, small_side))
         image = image.resize((256,256))
-        if image.mode is not "RGB":
+        if image.mode != "RGB":
             image = image.convert("RGB")
     if upload_image is None:
         image = dataset[value][0]
@@ -93,7 +93,7 @@ def input_image(value, upload_image):
 )
 def grey_image(input_image, zoom_factor, zoom_x, zoom_y, scale_factor):
     image = image_from_json(input_image)
-    if image.mode is not "L":
+    if image.mode != "L":
         image = image.convert("L")
 
     #zoom

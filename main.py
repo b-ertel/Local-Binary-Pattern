@@ -67,7 +67,7 @@ app.layout = dbc.Container(
 )
 
 
-
+server = app.server
 
 
 
