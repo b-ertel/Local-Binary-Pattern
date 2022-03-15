@@ -57,7 +57,7 @@ def lbp_hist(json_image,lbp_radius, lbp_number_points, lbp_method):
     grey_image = image_from_json(json_image)
     lbp = local_binary_pattern(grey_image, lbp_number_points, lbp_radius, lbp_method).flatten()
     fig = go.Figure(data=[go.Histogram(x=lbp, nbinsx=int(lbp.max()+1))])
-    fig.update_layout(yaxis_range=[0, 4000])
+    # fig.update_layout(yaxis_range=[0, 4000])
     # fig.update_yaxes(title_text="y-axis in logarithmic scale", type="log")
     fig.layout.height = 450
     fig.layout.width  = 1000
