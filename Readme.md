@@ -1,6 +1,6 @@
 # Local Binary Pattern
 
-Local binary pattern (LBP) is a method used to extract statistical features from and grey-scale* image.
+Local binary pattern (LBP) is a method used to extract statistical features from grey-scale* images.
 It was first introduced by 
 
 > Ojala et al., “A comparative study of texture 
@@ -8,10 +8,17 @@ measures with classification based on feature distributions”. Pattern
 Recognition. 29(1), 51–59 (1996) 
 
 It transforms the image into a histogram which describes the frequency of occurence of local patterns. 
+Each entry in the histogram refers to a **pattern** occuring in the image. In the simple case we look at a pixel **c** and its surrounding 8 pixels. We compare each pixel p to the center pixel and replace them with
+
+![test](readme_images/comparison_rule.svg "test")
+
+When reading the values clockwise this results in a binary number which can be transformed into a decimal number. Counting the occurence of each value results in the final histogram.
 
 
+![Sketch to show how LBP works](readme_images/lbp_sketch.drawio.png "Image to LBP")
 *It has been extended to color/multi channel images.
 
+es
 
 
 # Dataset
@@ -36,4 +43,5 @@ To download the data type the following commands in the console:
 Install the dependencies by running:
 
     pip install requirements.txt
+
 

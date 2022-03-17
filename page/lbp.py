@@ -63,3 +63,4 @@ def lbp_hist(json_image,lbp_radius, lbp_number_points, lbp_method):
     fig.layout.width  = 1000
     fig["layout"].update(margin=dict(l=0, r=0, b=0, t=0))
     return fig
+
