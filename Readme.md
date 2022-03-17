@@ -41,7 +41,9 @@ To download the data type the following commands in the console:
 
 Install the dependencies by running:
 
-    pip install requirements.txt
+    python -m venv venv
+    source venv/bin/activate
+    pip install -r requirements.txt
 
 and run the main file:
 
