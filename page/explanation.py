@@ -22,7 +22,7 @@ from skimage.feature import local_binary_pattern
 )
 def bins_to_text(selected):
     if selected is None:
-        return None
+        return f"You have not selected any bins!"
     allpoints = selected["points"]
     numbers = [allpoints[i]["x"] for i in range(len(allpoints))]
     return f"Selected: {numbers}"
@@ -39,8 +39,8 @@ def bins_to_text(selected):
 
 )
 def marked_image(json_image, selected):
-    x, y = selection_to_mask(selected)
     grey_image = image_from_json(json_image)
+    x, y = selection_to_mask(selected, grey_image.size)
     fig = px.imshow(grey_image, binary_string=True)
     fig.add_trace(go.Scatter(x = x, y = y, mode = "markers", marker=dict(color='red', size=5), opacity=0.5 ))
     fig.layout.height = 800

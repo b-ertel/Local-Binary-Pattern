@@ -15,15 +15,16 @@ import io
 
 image_transformation = dbc.Card(
     [
-        html.H4("Overall Settings", className="card-title"),
+        html.H4("Import an image", className="card-title"),
+        dbc.Label("(default dataset will be gone until you refresh the page)"),
         dcc.Upload(id="upload-image", children=html.Div(["Drag and Drop or ", html.A("Select File")]), style = {"borderWidth" : "1px", "borderStyle": "dashed", "borderRadius": "5px", "margin": "10px", "textAlign": "center"},),
         html.Div(
             [
-                dbc.Label("Image index"),
+                dbc.Label("Change to see other image from the Brodatz dataset"),
                 dbc.Input(id="image-index", type="number", value=1), #change this for brodatz-data
             ]
         ),
-        dbc.Label("Zoom factor"),
+        dbc.Label("Zoom into the image"),
         html.Div([
             dcc.Slider(1, 4, 0.25,
                        value=1,
@@ -43,7 +44,7 @@ image_transformation = dbc.Card(
     tooltip={"placement": "bottom", "always_visible": False}),
             # html.Div(id='zoom-y-container', children= "Shift in Y")
         ]),
-        dbc.Label("Scale"),
+        dbc.Label("Scale the image down by the factor"),
         html.Div([
             dcc.Slider(1, 4, 0.25,
                        value=1,
@@ -68,8 +69,10 @@ def input_image(value, upload_image):
         decoded = base64.b64decode(upload_image.split("base64,")[1])
         image = Image.open(io.BytesIO(decoded))
         small_side = image.size[0] if image.size[0] < image.size[1] else image.size[1]
-        image = image.crop(((image.size[0]-small_side)//2,(image.size[1]-small_side)//2,small_side, small_side))
-        image = image.resize((256,256))
+        left = (image.size[0]-small_side)//2
+        top = (image.size[1]-small_side)//2
+        image = image.crop((left,top,left + small_side, top + small_side))
+        image = image.resize((400,400))
     if upload_image is None:
         image = dataset[value][0]
     if image.mode != "RGB":

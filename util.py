@@ -23,17 +23,17 @@ def selection_to_int_array(selected):
         allpoints = selected["points"]
         numbers = [allpoints[i]["x"] for i in range(len(allpoints))]
     if selected is None:
-        numbers = [1,2]
+        numbers = [1]
     return numbers
 
-def selection_to_mask(selected):
+def selection_to_mask(selected, image_size):
+    width, height = image_size
     if selected is not None:
-        image_size = 256
         allpoints = selected["points"]
         flat_indices = [allpoints[i]["pointNumbers"] for i in range(len(allpoints))]
         flat_indices = [item for sublist in flat_indices for item in sublist]
-        y = [ind // 256 for ind in flat_indices]
-        x = [ind % 256 for ind in flat_indices]
+        y = [ind // height for ind in flat_indices]
+        x = [ind % width for ind in flat_indices]
     if selected is None:
         x = [1]
         y = [1]

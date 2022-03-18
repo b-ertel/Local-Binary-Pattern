@@ -44,6 +44,7 @@ app.layout = dbc.Container(
         html.Hr(),
         dbc.Row([
             html.Div(html.H2("Local Binary Pattern Histogram"), style={'textAlign': 'center'}),
+            html.Div(html.H6("Select some bins with the selection tool to see them in the overlay!"), style={'textAlign': 'center'}),
             dbc.Col(lbp_setting, width=3),
             dbc.Col(html.Div(children=[dcc.Graph(id="lbp-hist")],
                              style={'display': 'inline-block'}))

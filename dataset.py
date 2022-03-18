@@ -1,9 +1,9 @@
-from torch.utils.data import Dataset
+# from torch.utils.data import Dataset
 from PIL import Image
 import os
 import pandas
 
-class ETHDataset(Dataset):
+class ETHDataset():
     """Dataset class for the flash images from the ETH synthesizability repository"""
     def __init__(self, img_dir = os.path.join("data", "ETH_Synthesizability", "texture"), transform=None, number_of_items = 7424):
         metadata = pandas.read_csv(f"data/eth_labels.csv")
@@ -99,14 +99,14 @@ class ETHDataset(Dataset):
 
 
 
-class BrodatzDataset(Dataset):
+class BrodatzDataset():
     """Dataset class for the flash images from the Brodatz repository"""
-    def __init__(self, img_dir = "data/textures", transform=None):
+    def __init__(self, img_dir = "data/textures", size = 400):
         self.metadata = pandas.read_csv(f"data/brodatz_labels.csv", header = None)
         # if number_of_items is not None:
         #     self.metadata  = self.metadata.sample(number_of_items)
         self.img_dir = img_dir
-        self.transform = transform
+        self.size = size
 
     def __len__(self):
         return len(self.metadata)
@@ -117,9 +117,11 @@ class BrodatzDataset(Dataset):
         image_path = os.path.join(self.img_dir, f"{img_name}")
         # print(image_path)
         image = Image.open(image_path)
-        if self.transform:
-            image = self.transform(image)
-
+        width, height = image.size
+        small_side = image.size[0] if image.size[0] < image.size[1] else image.size[1]
+        left = (image.size[0]-small_side)//2
+        top = (image.size[1]-small_side)//2
+        image = image.crop((left,top,left + self.size, top + self.size))
         return image, material  #, image_path
 
     def get_path(self, idx):
