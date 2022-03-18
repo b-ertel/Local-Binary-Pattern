@@ -26,6 +26,10 @@ When reading the values clockwise this results in a binary number which can be t
 
 # Run the code
 
+First clone the repository:
+
+    git clone https://github.com/b-ertel/Local-Binary-Pattern
+
 To download the data type the following commands in the console:
 
 
