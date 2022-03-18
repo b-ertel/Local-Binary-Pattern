@@ -2,6 +2,7 @@
 /data/ETH_Synthesizability.zip
 /data/textures.zip
 /data/textures
+/.idea
 venv
 *.pyc
 .DS_Store
