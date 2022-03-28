@@ -39,6 +39,7 @@ lbp_setting = dbc.Card(
             value="default",
             clearable=False,
         ),
+        html.Div(id="setting-error")
 ],
     body= True
 )
@@ -48,6 +49,7 @@ lbp_setting = dbc.Card(
 
 @app.callback(
     Output("lbp-hist", "figure"),
+    Output("setting-error", "children"),
     Input("transformed_image", "data"),
     Input("lbp-radius", "value"),
     Input("lbp-number-points", "value"),
@@ -62,5 +64,9 @@ def lbp_hist(json_image,lbp_radius, lbp_number_points, lbp_method):
     fig.layout.height = 450
     fig.layout.width  = 1000
     fig["layout"].update(margin=dict(l=0, r=0, b=0, t=0))
-    return fig
+    error = None
+    if ((lbp_number_points != 8) or (lbp_method != "default")):
+        error = "You changed default settings for LBP... The filters in the section below might not be valid anymore!"
+
+    return fig, error
 
