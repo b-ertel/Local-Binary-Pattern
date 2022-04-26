@@ -79,7 +79,7 @@ def create_filter_html(selection):
     integer_numbers = selection_to_int_array(selection)
     figures = [show_lbp_filter(i) for i in integer_numbers]
     content = [dbc.Col(dcc.Graph(figure = fig, id=f"filter_{num}")) for fig, num in zip(figures, integer_numbers)]
-    content = [dbc.Row(content[i:i+4]) for i in range(len(content)//4+1)]
+    content = [dbc.Row(content[i*4:i*4+4]) for i in range(len(content)//4+1)]
     return content
 
 filters =   dbc.Row([
